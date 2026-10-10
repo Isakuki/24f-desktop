@@ -1,0 +1,88 @@
+/* Kexlo title bar: the small Kexlo mark (white K, red gem) on the left, a 60% black glass strip with a faint red
+   light behind the mark and a red hairline underneath. Windows draws its native minimise / maximise /
+   close buttons on the right; macOS (body.mac) draws its traffic lights on the left, so there the mark
+   sits right of them and the update pill takes the right edge. The window's acrylic (Windows) or
+   vibrancy (macOS) material shows through the strip. */
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+.bar {
+  position: relative;
+  height: 32px; /* BAR_HEIGHT in main.js */
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  /* ends in the same 60% black as the caption buttons (titleBarOverlay in main.js) */
+  background: linear-gradient(90deg, rgb(90 8 16 / 62%) 0, rgb(0 0 0 / 60%) 220px);
+  box-shadow: inset 0 -1px 0 rgb(255 60 60 / 16%);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+/* mark-red.png is the K centred in a wide 560 x 326 canvas: show only its middle (the K and gem), so the
+   mark starts at the bar's left padding like the old wide mark did. */
+.mark { height: 17px; width: 13px; object-fit: cover; object-position: 50% 50%; display: block; pointer-events: none; }
+/* The centre strip, kept clear of the mark (left) and the caption buttons (right, 138px): the title
+   in the middle and, when the site asks for them, a small tab on each side of it. The two sides
+   share the leftover width equally, so the title stays centred; without tabs they are empty and the
+   bar looks exactly as before. Only the tabs take the mouse: the rest still drags the window. */
+.center {
+  position: absolute; left: 160px; right: 160px; top: 0; height: 100%;
+  display: flex; align-items: center;
+  pointer-events: none;
+}
+.side { flex: 1 1 0; display: flex; align-items: center; }
+.side.left { justify-content: flex-end; padding-right: 10px; }
+.side.right { justify-content: flex-start; padding-left: 10px; }
+/* Bold white, one line. */
+.title {
+  flex: 0 1 auto; min-width: 0;
+  color: #fff; font: 700 13px/32px "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+/* A tab: a quiet glass chip; the shown one is brighter with a red underline. */
+.tab {
+  pointer-events: auto; -webkit-app-region: no-drag;
+  height: 22px; max-width: 170px; padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 14%); border-radius: 6px;
+  background: rgb(255 255 255 / 6%); color: rgb(255 255 255 / 66%);
+  font: 600 12px/20px "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: default;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.tab:hover { background: rgb(255 255 255 / 12%); color: #fff; }
+.tab[aria-pressed="true"] {
+  background: rgb(255 255 255 / 17%); border-color: rgb(255 90 90 / 50%); color: #fff;
+  box-shadow: inset 0 -2px 0 rgb(230 40 55 / 90%);
+}
+.tab:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.tab[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .tab { transition: none; } }
+/* A title change: fade out (slightly lifted), then the new text fades back in. */
+.title.fading { opacity: 0; transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .title { transition: none; } }
+/* "Update ready - Restart": a small pill left of the caption buttons, shown only when a
+   downloaded update is waiting. Clicking restarts into it on the same page; ignoring it is fine,
+   the update installs the next time the app is closed. */
+.update {
+  position: absolute; right: 146px; top: 5px; height: 22px; padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 28%); border-radius: 11px;
+  background: rgb(210 30 45 / 85%); color: #fff;
+  font: 600 12px/20px "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  white-space: nowrap; cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+.update:hover { background: rgb(230 40 55 / 95%); }
+.update:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.update:disabled { cursor: default; opacity: .8; }
+.update[hidden] { display: none; }
+.has-update .center { right: 320px; }
+
+/* macOS. The traffic lights (main.js TRAFFIC_LIGHTS: 12px in, three 14px buttons 20px apart, so
+   they end at 66px) sit on the left: the mark starts at 80px. In fullscreen macOS hides them and the
+   mark returns to the left edge. Nothing is drawn on the right, so the pill sits at the right edge;
+   the title keeps equal insets on both sides, so it stays centred in the window and clear of the
+   lights and the pill at every width down to the 980px minimum. */
+.mac .bar { padding-left: 80px; -webkit-font-smoothing: antialiased; }
+.mac.fullscreen .bar { padding-left: 12px; }
+.mac .update { right: 10px; }
+.mac.has-update .center { left: 210px; right: 210px; }

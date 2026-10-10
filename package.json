@@ -1,0 +1,125 @@
+{
+  "name": "24f-desktop",
+  "productName": "Kexlo",
+  "version": "1.2.1",
+  "description": "Kexlo desktop app",
+  "author": "Kexlo",
+  "private": true,
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64 --publish never",
+    "dist:mac": "electron-builder --mac --universal --publish never",
+    "release": "npm run dist && node scripts/publish.mjs"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "site.24f.desktop",
+    "productName": "Kexlo",
+    "copyright": "Kexlo",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "app/**/*",
+      "package.json",
+      "!**/node_modules/**/*.{md,markdown,map,ts,mts,cts}",
+      "!**/node_modules/**/{CHANGELOG,README,readme,changelog,HISTORY,history}*",
+      "!**/node_modules/**/{test,tests,__tests__,example,examples,docs}/**"
+    ],
+    "asar": true,
+    "electronLanguages": [
+      "en-US"
+    ],
+    "compression": "maximum",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "executableName": "24F",
+      "artifactName": "Kexlo-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Kexlo",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.business",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "notarize": false,
+      "minimumSystemVersion": "12.0",
+      "darkModeSupport": true,
+      "artifactName": "Kexlo-${version}-mac-${arch}.${ext}",
+      "extendInfo": {
+        "NSHighResolutionCapable": true
+      },
+      "publish": [
+        {
+          "provider": "generic",
+          "url": "https://24f.site/desktop/mac"
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Kexlo",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://24f.site/desktop/win"
+      }
+    ]
+  }
+}
