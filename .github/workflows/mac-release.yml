@@ -1,0 +1,76 @@
+# Builds the Kexlo Mac app and adds it to the matching release. Each release pushes this file to
+# .github/workflows/mac-release.yml on the `mac-source` branch of Isakuki/24f-desktop, together with
+# the app's source, right after the Windows release v<version> is published. The push starts it.
+#
+# No secrets to add: the built-in GITHUB_TOKEN (contents: write, below) uploads to this repo's own
+# release. The app is ad-hoc signed only (no Apple Developer account, no notarisation), so on first
+# launch users right-click > Open, or allow it in System Settings > Privacy & Security.
+name: Mac release
+
+on:
+  push:
+    branches: [mac-source]
+  workflow_dispatch:
+
+concurrency:
+  group: mac-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Read the version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check the Windows release exists
+        run: |
+          # The Windows release v<version> is created before this push; wait a little in case GitHub lags.
+          for i in 1 2 3 4 5 6; do
+            gh release view "v${{ steps.version.outputs.version }}" > /dev/null && exit 0
+            sleep 20
+          done
+          echo "::error::Release v${{ steps.version.outputs.version }} not found. Publish the Windows release first."
+          exit 1
+
+      - name: Build universal .dmg and .zip (ad-hoc signed)
+        run: npm run dist:mac
+
+      - name: Check the app
+        run: |
+          app="dist/mac-universal/Kexlo.app"
+          lipo -archs "$app/Contents/MacOS/Kexlo"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist"
+          cat dist/latest-mac.yml
+
+      - name: Upload to release v${{ steps.version.outputs.version }}
+        run: |
+          v="${{ steps.version.outputs.version }}"
+          # Fixed names so https://24f.site/download/mac always gets the newest .dmg: Kexlo-mac.dmg, plus
+          # the same file under the name used before 1.2.0 (24FulfillR-mac.dmg) for older links.
+          cp "dist/Kexlo-$v-mac-universal.dmg" dist/Kexlo-mac.dmg
+          cp "dist/Kexlo-$v-mac-universal.dmg" dist/24FulfillR-mac.dmg
+          files=("dist/Kexlo-$v-mac-universal.dmg" "dist/Kexlo-$v-mac-universal.zip" dist/Kexlo-mac.dmg dist/24FulfillR-mac.dmg dist/latest-mac.yml)
+          for f in "dist/Kexlo-$v-mac-universal.dmg.blockmap" "dist/Kexlo-$v-mac-universal.zip.blockmap"; do
+            [ -f "$f" ] && files+=("$f")
+          done
+          gh release upload "v$v" "${files[@]}" --clobber

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; style-src 'self' file:; script-src 'self' file:">
+<title>Kexlo</title>
+<link rel="stylesheet" href="titlebar.css">
+</head>
+<body>
+  <header class="bar">
+    <img class="mark" src="mark-red.png" alt="Kexlo" draggable="false">
+    <div class="center">
+      <div class="side left"><button class="tab" id="tab-left" type="button" aria-pressed="false" hidden></button></div>
+      <div class="title" id="title">Kexlo</div>
+      <div class="side right"><button class="tab" id="tab-right" type="button" aria-pressed="false" hidden></button></div>
+    </div>
+    <button class="update" id="update" type="button" hidden title="Restart Kexlo to finish updating. You'll be back on the same page.">Update ready &middot; Restart</button>
+  </header>
+<script src="titlebar.js"></script>
+</body>
+</html>
